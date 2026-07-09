@@ -34,7 +34,7 @@ npm run dev
    - `DATABASE_URL` — dari Coolify managed DB
    - `JWT_SECRET` — string acak panjang (misal hasil `openssl rand -hex 32`)
    - `CORS_ORIGIN` — URL frontend produksi, misal `https://pos.yourdomain.com`
-   - `PORT` — `3001`
+   - `PORT` — `7456`
 4. Deploy → Coolify akan build Docker image otomatis
 5. Jalankan seed setelah deploy pertama:
    ```bash
