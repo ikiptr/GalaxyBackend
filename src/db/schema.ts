@@ -25,7 +25,7 @@ export const categories = pgTable("categories", {
 // ── Suppliers ──────────────────────────────────────────────────
 export const suppliers = pgTable("suppliers", {
   id:      text("id").primaryKey(),
-  name:    text("name").notNull(),
+  name:    text("name").unique().notNull(),
   phone:   text("phone"),
   address: text("address"),
 });
