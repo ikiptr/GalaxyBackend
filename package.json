@@ -2,6 +2,7 @@
   "name": "galaxy-pos-backend",
   "version": "1.0.0",
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "node --watch --experimental-strip-types src/index.ts",
     "build": "tsc",
