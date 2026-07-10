@@ -11,6 +11,7 @@ import penjualanRoutes  from "./routes/penjualan.js";
 import pemesananRoutes  from "./routes/pemesanan.js";
 import absensiRoutes    from "./routes/absensi.js";
 import akunRoutes       from "./routes/akun.js";
+import tagihanRoutes    from "./routes/tagihan.js";
 
 const app = new Hono();
 
@@ -35,6 +36,7 @@ app.route("/api/penjualan", penjualanRoutes);
 app.route("/api/pemesanan", pemesananRoutes);
 app.route("/api/absensi",   absensiRoutes);
 app.route("/api/akun",      akunRoutes);
+app.route("/api/tagihan",   tagihanRoutes);
 
 // ── 404 ────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ error: "Not found" }, 404));

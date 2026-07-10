@@ -90,3 +90,19 @@ export const absensi = pgTable("absensi", {
   tanggal: date("tanggal").notNull(),
   hadir:  boolean("hadir").default(true).notNull(),
 });
+
+// ── Tagihan (Supplier invoices) ────────────────────────────────
+export const tagihan = pgTable("tagihan", {
+  id:             text("id").primaryKey(),
+  supplierId:     text("supplier_id"),
+  supplierName:   text("supplier_name").notNull(),
+  nomorTagihan:   text("nomor_tagihan").notNull(),
+  keterangan:     text("keterangan").default("").notNull(),
+  total:          integer("total").notNull(),
+  sudahDibayar:   integer("sudah_dibayar").default(0).notNull(),
+  jatuhTempo:     text("jatuh_tempo").notNull(),   // "YYYY-MM-DD"
+  tanggalTagihan: text("tanggal_tagihan").notNull(), // "YYYY-MM-DD"
+  status:         text("status").default("Belum Bayar").notNull(), // Belum Bayar | Bayar Sebagian | Lunas
+  buktiBayar:     text("bukti_bayar").default("[]").notNull(),     // JSON array of data URLs
+  createdAt:      timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
