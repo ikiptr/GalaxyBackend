@@ -32,8 +32,8 @@ app.get("/:id", async (c) => {
   return c.json(row);
 });
 
-// POST /api/barang  (boss+)
-app.post("/", requireRole("boss", "superadmin"), async (c) => {
+// POST /api/barang  (karyawan+)
+app.post("/", async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = barangSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
@@ -47,8 +47,8 @@ app.post("/", requireRole("boss", "superadmin"), async (c) => {
   return c.json(row, 201);
 });
 
-// PUT /api/barang/:id  (boss+)
-app.put("/:id", requireRole("boss", "superadmin"), async (c) => {
+// PUT /api/barang/:id  (karyawan+)
+app.put("/:id", async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = barangSchema.partial().safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
