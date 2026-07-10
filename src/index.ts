@@ -41,7 +41,7 @@ app.notFound((c) => c.json({ error: "Not found" }, 404));
 
 // ── Start ──────────────────────────────────────────────────────
 const port = Number(process.env.PORT ?? 3001);
-serve({ fetch: app.fetch, port }, () => {
+serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, () => {
   console.log(`🚀 Galaxy POS backend running on port ${port}`);
 });
 
