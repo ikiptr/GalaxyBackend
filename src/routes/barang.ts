@@ -38,9 +38,10 @@ app.post("/", async (c) => {
   const parsed = barangSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
-  // Ensure SKU is unique
-  const [existing] = await db.select().from(schema.barang).where(eq(schema.barang.sku, parsed.data.sku));
-  if (existing) return c.json({ error: "SKU sudah digunakan" }, 409);
+  // SKU unique per supplier (same SKU allowed from different suppliers)
+  const existingRows = await db.select().from(schema.barang).where(eq(schema.barang.sku, parsed.data.sku));
+  const duplicate = existingRows.find((r) => (r.supplier ?? "") === (parsed.data.supplier ?? ""));
+  if (duplicate) return c.json({ error: "SKU sudah digunakan oleh supplier yang sama" }, 409);
 
   const id = randomUUID();
   const [row] = await db.insert(schema.barang).values({ id, ...parsed.data }).returning();

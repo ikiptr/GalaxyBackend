@@ -33,7 +33,7 @@ export const suppliers = pgTable("suppliers", {
 // ── Barang (Products) ──────────────────────────────────────────
 export const barang = pgTable("barang", {
   id:       text("id").primaryKey(),
-  sku:      text("sku").unique().notNull(),
+  sku:      text("sku").notNull(),
   name:     text("name").notNull(),
   category: text("category").references(() => categories.name, { onDelete: "set null" }),
   supplier: text("supplier").references(() => suppliers.name, { onDelete: "set null" }),
