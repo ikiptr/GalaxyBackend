@@ -91,6 +91,19 @@ export const absensi = pgTable("absensi", {
   hadir:  boolean("hadir").default(true).notNull(),
 });
 
+// ── Antaran (Deliveries) ───────────────────────────────────────
+export const antaran = pgTable("antaran", {
+  id:         text("id").primaryKey(),
+  invoice:    text("invoice").notNull(),
+  customer:   text("customer").notNull(),
+  phone:      text("phone").default("-").notNull(),
+  address:    text("address").notNull(),
+  items:      text("items").notNull(),   // JSON array [{name,sku,qty}]
+  date:       text("date").notNull(),
+  status:     text("status").default("Belum Diantar").notNull(),
+  createdAt:  timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ── Tagihan (Supplier invoices) ────────────────────────────────
 export const tagihan = pgTable("tagihan", {
   id:             text("id").primaryKey(),
