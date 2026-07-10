@@ -22,7 +22,8 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 
 const paySchema = z.object({
-  tambahBayar: z.number().int().min(1),
+  tambahBayar: z.number().int().min(0),
+  buktiBayar:  z.array(z.string()).optional(),
 });
 
 function computeStatus(total: number, paid: number): string {
@@ -94,11 +95,17 @@ app.post("/:id/pay", async (c) => {
   const [existing] = await db.select().from(schema.tagihan).where(eq(schema.tagihan.id, c.req.param("id")));
   if (!existing) return c.json({ error: "Not found" }, 404);
 
-  const newPaid = Math.min(existing.total, existing.sudahDibayar + parsed.data.tambahBayar);
+  const newPaid = parsed.data.tambahBayar > 0
+    ? Math.min(existing.total, existing.sudahDibayar + parsed.data.tambahBayar)
+    : existing.sudahDibayar;
   const status = computeStatus(existing.total, newPaid);
 
+  // Merge existing bukti with new ones (append)
+  const existingBukti: string[] = JSON.parse(existing.buktiBayar || "[]");
+  const newBukti = [...existingBukti, ...(parsed.data.buktiBayar ?? [])];
+
   const [row] = await db.update(schema.tagihan)
-    .set({ sudahDibayar: newPaid, status })
+    .set({ sudahDibayar: newPaid, status, buktiBayar: JSON.stringify(newBukti) })
     .where(eq(schema.tagihan.id, c.req.param("id")))
     .returning();
   return c.json({ ...row, buktiBayar: JSON.parse(row.buktiBayar || "[]") });
