@@ -56,10 +56,8 @@ app.post("/", async (c) => {
   return c.json({ id }, 201);
 });
 
-// DELETE /api/penjualan/:id  (superadmin only)
+// DELETE /api/penjualan/:id  (all authenticated users)
 app.delete("/:id", async (c) => {
-  const user = c.get("user");
-  if (user.role !== "superadmin") return c.json({ error: "Forbidden" }, 403);
   const [row] = await db.delete(schema.penjualan).where(eq(schema.penjualan.id, c.req.param("id"))).returning();
   if (!row) return c.json({ error: "Not found" }, 404);
   broadcast("penjualan");
