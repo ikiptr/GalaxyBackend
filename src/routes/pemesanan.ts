@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { eq, desc } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { jwtAuth, requireRole } from "../middleware/auth.js";
+import { broadcast } from "./events.js";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
@@ -67,6 +68,7 @@ app.post("/", async (c) => {
       barangName: item.name, qty: item.qty, price: item.price,
     });
   }
+  broadcast("pemesanan");
   return c.json({ id }, 201);
 });
 

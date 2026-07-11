@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { eq, desc } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { jwtAuth } from "../middleware/auth.js";
+import { broadcast } from "./events.js";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
@@ -51,6 +52,7 @@ app.post("/", async (c) => {
       barangName: item.name, qty: item.qty, price: item.price,
     });
   }
+  broadcast("penjualan");
   return c.json({ id }, 201);
 });
 
@@ -60,6 +62,7 @@ app.delete("/:id", async (c) => {
   if (user.role !== "superadmin") return c.json({ error: "Forbidden" }, 403);
   const [row] = await db.delete(schema.penjualan).where(eq(schema.penjualan.id, c.req.param("id"))).returning();
   if (!row) return c.json({ error: "Not found" }, 404);
+  broadcast("penjualan");
   return c.json({ ok: true });
 });
 
