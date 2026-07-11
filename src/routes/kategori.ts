@@ -14,7 +14,7 @@ app.get("/", async (c) => {
   return c.json(await db.select().from(schema.categories));
 });
 
-app.post("/", requireRole("boss", "superadmin"), async (c) => {
+app.post("/", async (c) => {
   const parsed = bodySchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const [existing] = await db.select().from(schema.categories).where(eq(schema.categories.name, parsed.data.name));
@@ -23,7 +23,7 @@ app.post("/", requireRole("boss", "superadmin"), async (c) => {
   return c.json(row, 201);
 });
 
-app.put("/:id", requireRole("boss", "superadmin"), async (c) => {
+app.put("/:id", async (c) => {
   const parsed = bodySchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const [row] = await db.update(schema.categories).set(parsed.data).where(eq(schema.categories.id, c.req.param("id"))).returning();

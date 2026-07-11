@@ -18,14 +18,14 @@ app.get("/", async (c) => {
   return c.json(await db.select().from(schema.suppliers));
 });
 
-app.post("/", requireRole("boss", "superadmin"), async (c) => {
+app.post("/", async (c) => {
   const parsed = bodySchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const [row] = await db.insert(schema.suppliers).values({ id: randomUUID(), ...parsed.data }).returning();
   return c.json(row, 201);
 });
 
-app.put("/:id", requireRole("boss", "superadmin"), async (c) => {
+app.put("/:id", async (c) => {
   const parsed = bodySchema.partial().safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const [row] = await db.update(schema.suppliers).set(parsed.data).where(eq(schema.suppliers.id, c.req.param("id"))).returning();

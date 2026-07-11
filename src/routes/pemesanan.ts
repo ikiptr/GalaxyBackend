@@ -86,7 +86,7 @@ app.patch("/:id/payment", async (c) => {
 });
 
 // DELETE /api/pemesanan/:id  (boss+)
-app.delete("/:id", requireRole("boss", "superadmin"), async (c) => {
+app.delete("/:id", async (c) => {
   const [row] = await db.delete(schema.pemesanan).where(eq(schema.pemesanan.id, c.req.param("id"))).returning();
   if (!row) return c.json({ error: "Not found" }, 404);
   return c.json({ ok: true });
