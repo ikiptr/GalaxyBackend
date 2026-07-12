@@ -56,7 +56,7 @@ export const penjualanItems = pgTable("penjualan_items", {
   id:           text("id").primaryKey(),
   penjualanId:  text("penjualan_id").references(() => penjualan.id, { onDelete: "cascade" }),
   barangName:   text("barang_name").notNull(),
-  qty:          integer("qty").notNull(),
+  qty:          real("qty").notNull(),   // real to support decimals e.g. 7.5m cable
   price:        real("price").notNull(),
 });
 
@@ -79,7 +79,7 @@ export const pemesananItems = pgTable("pemesanan_items", {
   id:          text("id").primaryKey(),
   pemesananId: text("pemesanan_id").references(() => pemesanan.id, { onDelete: "cascade" }),
   barangName:  text("barang_name").notNull(),
-  qty:         integer("qty").notNull(),
+  qty:         real("qty").notNull(),   // real to support decimals e.g. 7.5m cable
   price:       real("price").notNull(),
 });
 

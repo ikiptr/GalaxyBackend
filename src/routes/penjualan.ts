@@ -11,7 +11,7 @@ app.use("*", jwtAuth());
 
 const itemSchema = z.object({
   name:  z.string().min(1),
-  qty:   z.number().int().min(1),
+  qty:   z.number().min(0.01),
   price: z.number().min(0),
 });
 
