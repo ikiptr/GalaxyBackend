@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { jwtAuth, requireRole } from "../middleware/auth.js";
+import { broadcast } from "./events.js";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
@@ -45,6 +46,7 @@ app.post("/", async (c) => {
 
   const id = randomUUID();
   const [row] = await db.insert(schema.barang).values({ id, ...parsed.data }).returning();
+  broadcast("barang");
   return c.json(row, 201);
 });
 
@@ -56,6 +58,7 @@ app.put("/:id", async (c) => {
 
   const [row] = await db.update(schema.barang).set(parsed.data).where(eq(schema.barang.id, c.req.param("id"))).returning();
   if (!row) return c.json({ error: "Not found" }, 404);
+  broadcast("barang");
   return c.json(row);
 });
 
@@ -63,6 +66,7 @@ app.put("/:id", async (c) => {
 app.delete("/:id", requireRole("superadmin"), async (c) => {
   const [row] = await db.delete(schema.barang).where(eq(schema.barang.id, c.req.param("id"))).returning();
   if (!row) return c.json({ error: "Not found" }, 404);
+  broadcast("barang");
   return c.json({ ok: true });
 });
 

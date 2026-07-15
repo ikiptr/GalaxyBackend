@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db, schema } from "../db/index.js";
 import { jwtAuth } from "../middleware/auth.js";
 import { broadcast } from "./events.js";
@@ -51,8 +51,13 @@ app.post("/", async (c) => {
       id: randomUUID(), penjualanId: id,
       barangName: item.name, qty: item.qty, price: item.price,
     });
+    // Deduct stock — only for items that exist in barang table (by name)
+    await db.update(schema.barang)
+      .set({ stock: sql`GREATEST(0, ${schema.barang.stock} - ${Math.ceil(item.qty)})` })
+      .where(eq(schema.barang.name, item.name));
   }
   broadcast("penjualan");
+  broadcast("barang"); // notify stock-opname / inventaris listeners
   return c.json({ id }, 201);
 });
 
