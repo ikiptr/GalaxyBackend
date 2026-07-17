@@ -10,9 +10,10 @@ const app = new Hono();
 app.use("*", jwtAuth());
 
 const itemSchema = z.object({
-  name:  z.string().min(1),
-  qty:   z.number().min(0.01),
-  price: z.number().min(0),
+  name:     z.string().min(1),
+  qty:      z.number().min(0.01),
+  price:    z.number().min(0),
+  barangId: z.string().optional(), // when set, stock is decremented by id (unique) instead of name
 });
 
 const createSchema = z.object({
@@ -51,10 +52,17 @@ app.post("/", async (c) => {
       id: randomUUID(), penjualanId: id,
       barangName: item.name, qty: item.qty, price: item.price,
     });
-    // Deduct stock — only for items that exist in barang table (by name)
-    await db.update(schema.barang)
-      .set({ stock: sql`GREATEST(0, ${schema.barang.stock} - ${Math.ceil(item.qty)})` })
-      .where(eq(schema.barang.name, item.name));
+    // Deduct stock — match by id when available so duplicate names/SKUs across suppliers
+    // don't both get decremented. Fall back to name for legacy/manual items.
+    if (item.barangId) {
+      await db.update(schema.barang)
+        .set({ stock: sql`GREATEST(0, ${schema.barang.stock} - ${Math.ceil(item.qty)})` })
+        .where(eq(schema.barang.id, item.barangId));
+    } else {
+      await db.update(schema.barang)
+        .set({ stock: sql`GREATEST(0, ${schema.barang.stock} - ${Math.ceil(item.qty)})` })
+        .where(eq(schema.barang.name, item.name));
+    }
   }
   broadcast("penjualan");
   broadcast("barang"); // notify stock-opname / inventaris listeners
