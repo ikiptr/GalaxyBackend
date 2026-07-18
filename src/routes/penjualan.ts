@@ -11,9 +11,10 @@ app.use("*", jwtAuth());
 
 const itemSchema = z.object({
   name:     z.string().min(1),
+  sku:      z.string().optional(),  // stored at sale time so detail/receipt shows correct SKU
   qty:      z.number().min(0.01),
   price:    z.number().min(0),
-  barangId: z.string().optional(), // when set, stock is decremented by id (unique) instead of name
+  barangId: z.string().optional(),   // when set, stock is decremented by id (unique) instead of name
 });
 
 const createSchema = z.object({
@@ -26,10 +27,10 @@ const createSchema = z.object({
 app.get("/", async (c) => {
   const rows = await db.select().from(schema.penjualan).orderBy(desc(schema.penjualan.date));
   const items = await db.select().from(schema.penjualanItems);
-  return c.json(rows.map((r) => ({
+    return c.json(rows.map((r) => ({
     ...r,
     products: items.filter((i) => i.penjualanId === r.id).map((i) => ({
-      name: i.barangName, qty: i.qty, price: i.price,
+      name: i.barangName, sku: i.barangSku ?? null, qty: i.qty, price: i.price,
     })),
     qty: items.filter((i) => i.penjualanId === r.id).reduce((s, i) => s + i.qty, 0),
   })));
@@ -50,7 +51,10 @@ app.post("/", async (c) => {
   for (const item of parsed.data.items) {
     await db.insert(schema.penjualanItems).values({
       id: randomUUID(), penjualanId: id,
-      barangName: item.name, qty: item.qty, price: item.price,
+      barangName: item.name,
+      barangSku:  item.sku ?? null,
+      barangId:   item.barangId ?? null,
+      qty: item.qty, price: item.price,
     });
     // Deduct stock — match by id when available so duplicate names/SKUs across suppliers
     // don't both get decremented. Fall back to name for legacy/manual items.

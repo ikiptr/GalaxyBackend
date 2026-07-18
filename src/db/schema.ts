@@ -56,6 +56,8 @@ export const penjualanItems = pgTable("penjualan_items", {
   id:           text("id").primaryKey(),
   penjualanId:  text("penjualan_id").references(() => penjualan.id, { onDelete: "cascade" }),
   barangName:   text("barang_name").notNull(),
+  barangSku:    text("barang_sku"),      // stored at sale time — avoids wrong SKU when names collide
+  barangId:     text("barang_id"),       // reference to barang.id (nullable for manual items)
   qty:          real("qty").notNull(),   // real to support decimals e.g. 7.5m cable
   price:        real("price").notNull(),
 });
