@@ -106,6 +106,24 @@ export const antaran = pgTable("antaran", {
   createdAt:  timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// ── Catat Pesanan (Supplier order lists) ──────────────────────
+export const catatPesanan = pgTable("catat_pesanan", {
+  id:          text("id").primaryKey(),
+  supplier:    text("supplier").notNull(),
+  createdBy:   text("created_by").references(() => users.id, { onDelete: "set null" }),
+  date:        text("date").notNull(),
+  createdAt:   timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const catatPesananItems = pgTable("catat_pesanan_items", {
+  id:          text("id").primaryKey(),
+  pesananId:   text("pesanan_id").references(() => catatPesanan.id, { onDelete: "cascade" }).notNull(),
+  barangId:    text("barang_id"),
+  barangName:  text("barang_name").notNull(),
+  barangSku:   text("barang_sku"),
+  qty:         integer("qty").notNull(),
+});
+
 // ── Tagihan (Supplier invoices) ────────────────────────────────
 export const tagihan = pgTable("tagihan", {
   id:             text("id").primaryKey(),
