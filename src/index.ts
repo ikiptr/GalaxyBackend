@@ -15,6 +15,7 @@ import tagihanRoutes    from "./routes/tagihan.js";
 import antaranRoutes    from "./routes/antaran.js";
 import eventsRoutes        from "./routes/events.js";
 import catatPesananRoutes  from "./routes/catat-pesanan.js";
+import cicilanRoutes       from "./routes/cicilan.js";
 
 const app = new Hono();
 
@@ -43,6 +44,7 @@ app.route("/api/tagihan",   tagihanRoutes);
 app.route("/api/antaran",   antaranRoutes);
 app.route("/api/events",         eventsRoutes);
 app.route("/api/catat-pesanan",  catatPesananRoutes);
+app.route("/api/cicilan",        cicilanRoutes);
 
 // ── 404 ────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ error: "Not found" }, 404));

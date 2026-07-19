@@ -124,6 +124,28 @@ export const catatPesananItems = pgTable("catat_pesanan_items", {
   qty:         integer("qty").notNull(),
 });
 
+// ── Cicilan (Recurring payments) ──────────────────────────────
+export const cicilan = pgTable("cicilan", {
+  id:            text("id").primaryKey(),
+  nama:          text("nama").notNull(),
+  keterangan:    text("keterangan").default("").notNull(),
+  jumlah:        integer("jumlah").notNull(),
+  tanggalMulai:  text("tanggal_mulai").notNull(),
+  jangkaBulan:   integer("jangka_bulan").notNull(),
+  tanggalBayar:  integer("tanggal_bayar").notNull(),
+  status:        text("status").default("Aktif").notNull(),
+  createdAt:     timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const cicilanPayments = pgTable("cicilan_payments", {
+  id:          text("id").primaryKey(),
+  cicilanId:   text("cicilan_id").references(() => cicilan.id, { onDelete: "cascade" }).notNull(),
+  bulan:       text("bulan").notNull(),
+  tanggalBayar: text("tanggal_bayar"),
+  jumlah:      integer("jumlah").notNull(),
+  catatan:     text("catatan").default("").notNull(),
+});
+
 // ── Tagihan (Supplier invoices) ────────────────────────────────
 export const tagihan = pgTable("tagihan", {
   id:             text("id").primaryKey(),
