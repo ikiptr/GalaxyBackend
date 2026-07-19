@@ -146,6 +146,20 @@ export const cicilanPayments = pgTable("cicilan_payments", {
   catatan:     text("catatan").default("").notNull(),
 });
 
+// ── Activity Log ──────────────────────────────────────────────
+export const activityLog = pgTable("activity_log", {
+  id:        text("id").primaryKey(),
+  userId:    text("user_id").notNull(),
+  userName:  text("user_name").notNull(),
+  userRole:  text("user_role").notNull(),
+  method:    text("method").notNull(),
+  path:      text("path").notNull(),
+  action:    text("action").notNull(),
+  detail:    text("detail").default("").notNull(),
+  status:    integer("status").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ── Tagihan (Supplier invoices) ────────────────────────────────
 export const tagihan = pgTable("tagihan", {
   id:             text("id").primaryKey(),
