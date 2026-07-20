@@ -76,15 +76,66 @@ app.use("*", cors({
   credentials: true,
 }));
 
+// ── Build detail string from request body ─────────────────────
+function buildDetail(resource: string, method: string, sub: string, body: Record<string, unknown>): string {
+  const rp = (n: unknown) => typeof n === "number" ? "Rp " + n.toLocaleString("id-ID") : String(n ?? "-");
+  try {
+    if (resource === "barang") {
+      if (method === "POST") return `SKU: ${body.sku ?? "-"} | Nama: ${body.name ?? "-"} | Harga Jual: ${rp(body.price)} | Harga Modal: ${rp(body.cost)} | Stok: ${body.stock ?? 0} | Supplier: ${body.supplier ?? "-"} | Kategori: ${body.category ?? "-"}`;
+      if (method === "PUT" || method === "PATCH") return `Update → ${Object.entries(body).filter(([k]) => k !== "id").map(([k,v]) => `${k}: ${rp(v)}`).join(" | ")}`;
+    }
+    if (resource === "penjualan" && method === "POST") {
+      const items = (body.items as Array<{ name: string; qty: number; price: number }> | undefined) ?? [];
+      const lines = items.map(i => `${i.name} x${i.qty} @${rp(i.price)}`).join(", ");
+      return `Total: ${body.total ?? "-"} | Items: ${lines}`;
+    }
+    if (resource === "pemesanan" && method === "POST") {
+      const items = (body.items as Array<{ name: string; qty: number; price: number }> | undefined) ?? [];
+      const lines = items.map(i => `${i.name} x${i.qty} @${rp(i.price)}`).join(", ");
+      return `Pelanggan: ${body.customer ?? "-"} | Total: ${body.total ?? "-"} | DP: ${body.dpPaid ?? "Rp 0"} | Items: ${lines}`;
+    }
+    if (resource === "tagihan") {
+      if (method === "POST" && !sub) return `Supplier: ${body.supplierName ?? "-"} | No: ${body.nomorTagihan ?? "-"} | Total: ${rp(body.total)} | Jatuh Tempo: ${body.jatuhTempo ?? "-"}`;
+      if (sub === "pay") return `Bayar: ${rp(body.tambahBayar)}`;
+      return Object.entries(body).map(([k,v]) => `${k}: ${rp(v)}`).join(" | ");
+    }
+    if (resource === "antaran" && method === "POST") return `Pelanggan: ${body.customer ?? "-"} | Alamat: ${body.address ?? "-"} | Invoice: ${body.invoice ?? "-"}`;
+    if (resource === "cicilan" && method === "POST" && !sub) return `Nama: ${body.nama ?? "-"} | Jumlah: ${rp(body.jumlah)}/bln | Mulai: ${body.tanggalMulai ?? "-"} | Jangka: ${body.jangkaBulan ?? "-"} bulan`;
+    if (resource === "cicilan" && sub === "bayar") return `Bulan: ${body.bulan ?? "-"}`;
+    if (resource === "kategori") return `Nama: ${body.name ?? "-"}`;
+    if (resource === "supplier") return `Nama: ${body.name ?? "-"} | Telp: ${body.phone ?? "-"} | Alamat: ${body.address ?? "-"}`;
+    if (resource === "akun" && method === "POST") return `Username: ${body.username ?? "-"} | Nama: ${body.name ?? "-"} | Role: ${body.role ?? "-"}`;
+    if (resource === "akun" && (method === "PUT" || method === "PATCH")) return `Update → ${Object.entries(body).filter(([k]) => k !== "password").map(([k,v]) => `${k}: ${v}`).join(" | ")}`;
+    if (resource === "catat-pesanan" && method === "POST") {
+      const items = (body.items as Array<{ name: string; qty: number }> | undefined) ?? [];
+      return `Supplier: ${body.supplier ?? "-"} | Items: ${items.map(i => `${i.name} x${i.qty}`).join(", ")}`;
+    }
+    if (resource === "absensi") return `User: ${body.userId ?? "-"} | Tanggal: ${body.tanggal ?? "-"}`;
+    // Generic fallback: stringify without huge fields
+    const safe = Object.fromEntries(Object.entries(body).filter(([,v]) => typeof v !== "object" || v === null));
+    return JSON.stringify(safe);
+  } catch {
+    return "";
+  }
+}
+
 // ── Activity logging — runs after every mutating API request ──
 app.use("/api/*", async (c, next) => {
-  await next();
   const method = c.req.method.toUpperCase();
-  if (!["POST","PUT","PATCH","DELETE"].includes(method)) return;
-
-  // Skip the log route itself and auth/login
   const path = new URL(c.req.url).pathname;
-  if (path.startsWith("/api/log") || path === "/api/auth/login") return;
+
+  // Only instrument mutating requests, skip log + login
+  if (!["POST","PUT","PATCH","DELETE"].includes(method)) { await next(); return; }
+  if (path.startsWith("/api/log") || path === "/api/auth/login") { await next(); return; }
+
+  // Clone body text BEFORE next() consumes the stream
+  let bodyText = "";
+  try {
+    const clone = c.req.raw.clone();
+    bodyText = await clone.text();
+  } catch { /* ignore */ }
+
+  await next();
 
   // Try to extract the user from the JWT (best-effort; skip if missing/invalid)
   try {
@@ -93,8 +144,21 @@ app.use("/api/*", async (c, next) => {
     const user = jwt.verify(header.slice(7), process.env.JWT_SECRET!) as AuthPayload;
     const status = c.res.status;
     const action = inferAction(method, path);
+
+    // Build detail from cloned body
+    const seg = path.replace(/^\/api\//, "").split("/");
+    const resource = seg[0] ?? "";
+    const sub = seg[2] ?? "";
+    let detail = "";
+    if (bodyText) {
+      try {
+        const body = JSON.parse(bodyText) as Record<string, unknown>;
+        detail = buildDetail(resource, method, sub, body);
+      } catch { detail = bodyText.slice(0, 200); }
+    }
+
     // fire-and-forget — don't await so the response is never delayed
-    writeLog({ user, method, path, action, status }).catch(() => {});
+    writeLog({ user, method, path, action, detail, status }).catch(() => {});
   } catch { /* invalid token or expired — skip logging */ }
 });
 
